@@ -3,7 +3,7 @@ Header only, zero heap allocation future/promise library built on top of FreeRTO
 ## Usage
 
 ```cpp
-#include <include/freertoshelpers.hpp>
+#include <include/freertosasync.hpp>
 
 int main() {
     FreeRTOSAsync::setImmediate([]() {
