@@ -70,22 +70,18 @@ void Promise::setValue()
 namespace Private
 {
     
-static PoolAllocator<Promise, PROMISES_COUNT>& pool()
-{
-    static PoolAllocator<Promise, PROMISES_COUNT> pool;
-    return pool;
-}
+inline PoolAllocator<Promise, PROMISES_COUNT> pool;
 
 inline void then(Future& future, Promise& promise)
 {
     if (future.deferred()) {
         future._promise->_then = [&promise]() {
             promise.setValue();
-            Private::pool().free(&promise);
+            Private::pool.free(&promise);
         };
     } else {
         promise.setValue();
-        Private::pool().free(&promise);
+        Private::pool.free(&promise);
     }
 }
 
@@ -94,7 +90,7 @@ inline void then(Future& future, Promise& promise)
 template <typename F>
 Future Future::then(F f)
 { 
-    Promise *newPromise = Private::pool().alloc();
+    Promise *newPromise = Private::pool.alloc();
     _promise->_then = [newPromise, f = std::move(f)]() {
         Future result = f();
         Private::then(result, *newPromise);
@@ -105,7 +101,7 @@ Future Future::then(F f)
 template <typename F>
 Future setImmediate(F f)
 {
-    Promise *promise = Private::pool().alloc();
+    Promise *promise = Private::pool.alloc();
     Future future = promise->getFuture();
 
     FreeRTOSHelpers::setImmediate([promise, f = std::move(f)]() {
@@ -119,7 +115,7 @@ Future setImmediate(F f)
 template <typename F>
 Future setTimeout(int interval, F f)
 {
-    Promise *promise = Private::pool().alloc();
+    Promise *promise = Private::pool.alloc();
     Future future = promise->getFuture();
 
     FreeRTOSHelpers::setTimeout(interval, [promise, f = std::move(f)]() {
